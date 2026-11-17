@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ name }} &middot; GiveFlow</title>
+<style>
+  :root{
+    --color-brand:#059669;--color-brand-dark:#047857;--color-brand-light:#d1fae5;--color-danger:#ef4444;--color-success:#059669;
+    --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b;
+    --line:#e2e8f0;
+    --shadow:0 10px 25px -5px rgba(0,0,0,0.06),0 8px 10px -6px rgba(0,0,0,0.03);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .container{max-width:760px;margin:0 auto;padding:32px 20px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:24px 0 8px;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:10px;color:var(--color-brand-dark)}
+  .brand .mark{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--color-brand),var(--color-brand-dark));color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.15rem}
+  .brand h1{font-size:1.25rem;letter-spacing:-0.02em}
+  .back{color:var(--muted);text-decoration:none;font-size:0.9rem}
+  .back:hover{color:var(--color-brand-dark);text-decoration:underline}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
+  h2{font-size:1rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;box-shadow:var(--shadow)}
+  .stat .v{font-size:1.35rem;font-weight:800;color:var(--text)}
+  .stat .l{font-size:0.72rem;color:var(--muted);margin-top:4px}
+  .stat .v.net{color:var(--color-success)}.stat .v.tax{color:var(--color-danger)}
+  .wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:0.9rem}
+  th{text-align:left;padding:12px 10px;font-size:0.72rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fbfdfe}
+  .addr{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.82rem;color:#334155;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .amt{font-weight:700;color:var(--text);white-space:nowrap}
+  .amt.tax{color:var(--color-danger)}.amt.net{color:var(--color-success)}
+  .time{font-size:0.8rem;color:var(--muted);white-space:nowrap}
+  .empty{padding:34px 16px;text-align:center;color:var(--muted);font-size:0.95rem}
+  @media(max-width:560px){.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="brand"><div class="mark">G</div><h1>GiveFlow</h1></div>
+    <a href="/" class="back">&larr; Back to ledger</a>
+  </header>
+  <div class="card">
+    <h2>Entries for {{ name }}</h2>
+    <div class="stats" id="stats"></div>
+    <div class="wrap"><table>
+      <thead><tr><th>Donor</th><th>Recipient</th><th>Amount</th><th>Tax</th><th>Net</th><th>Time (UTC)</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+    <div id="empty" class="empty">No entries for {{ name }} yet.</div>
+  </div>
+</div>
+<script>
+const money=n=>Number(n||0).toFixed(2)
+const fmtTime=iso=>new Date(iso).toLocaleString(undefined,{dateStyle:"short",timeStyle:"short"})
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+const tbody=document.getElementById("tbody"),empty=document.getElementById("empty"),stats=document.getElementById("stats")
+const donations={{ donations|tojson }}
+let ta=0,tt=0,tn=0
+tbody.innerHTML=""
+if(donations.length===0){document.querySelector("table").style.display="none";empty.style.display="block"}
+else{document.querySelector("table").style.display="table";empty.style.display="none"}
+for(const x of donations){
+  ta+=Number(x.amount||0);tt+=Number(x.tax_amount||0);tn+=Number(x.net_amount||0)
+  const tr=document.createElement("tr")
+  tr.innerHTML=`<td class="addr">${esc(x.donor)}</td><td class="addr">${esc(x.recipient)}</td><td class="amt">+${money(x.amount)}</td><td class="amt tax">&#8722;${money(x.tax_amount)}</td><td class="amt net">+${money(x.net_amount)}</td><td class="time">${fmtTime(x.timestamp)}</td>`
+  tbody.appendChild(tr)
+}
+stats.innerHTML=`<div class="stat"><div class="v">${money(ta)}</div><div class="l">Total donated</div></div><div class="stat"><div class="v tax">&#8722;${money(tt)}</div><div class="l">Platform tax</div></div><div class="stat"><div class="v net">+${money(tn)}</div><div class="l">Net to recipients</div></div>`
+</script>
+</body>
+</html>

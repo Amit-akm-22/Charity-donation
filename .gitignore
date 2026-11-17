@@ -1,0 +1,33 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Database & Runtime files
+donations.db
+*.db
+*.sqlite3
+*.log
+flask.out
+server.log
+
+# RSA Keys (auto-generated on startup if not present)
+platform_private.pem
+platform_public.pem
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GiveFlow &middot; Blockchain Charity Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --brand:#10b981;
+  --brand-glow:rgba(16,185,129,0.35);
+  --brand-dark:#059669;
+  --brand-deeper:#064e3b;
+  --purple:#8b5cf6;
+  --purple-light:#a78bfa;
+  --purple-glow:rgba(139,92,246,0.3);
+  --indigo:#6366f1;
+  --danger:#f87171;
+  --warn:#fbbf24;
+  --bg-dark:#030712;
+  --bg-card:rgba(15,23,42,0.7);
+  --bg-card2:rgba(17,24,39,0.8);
+  --text:#f1f5f9;
+  --text-muted:#94a3b8;
+  --text-dim:#64748b;
+  --border:rgba(148,163,184,0.12);
+  --border-glow:rgba(139,92,246,0.4);
+  --shadow-card:0 25px 50px -12px rgba(0,0,0,0.6),0 0 0 1px rgba(148,163,184,0.08);
+  --radius-xl:20px;
+  --radius-lg:14px;
+  --radius-md:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Outfit',system-ui,sans-serif;
+  background:var(--bg-dark);
+  color:var(--text);
+  line-height:1.6;
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BACKGROUND — STARFIELD + NEBULA
+═══════════════════════════════════════════════════════════════════════════ */
+#bg-canvas{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  z-index:0;pointer-events:none;
+}
+.nebula{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99,102,241,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(16,185,129,0.06) 0%, transparent 60%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════════════════════ */
+.container{max-width:1000px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════════════════════════════════ */
+nav{
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:rgba(3,7,18,0.75);
+  border-bottom:1px solid var(--border);
+  padding:14px 0;
+}
+.nav-inner{
+  max-width:1000px;margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--brand),var(--purple));
+  display:grid;place-items:center;font-size:1.1rem;font-weight:900;color:#fff;
+  box-shadow:0 0 16px var(--brand-glow);
+}
+.nav-name{font-size:1.1rem;font-weight:800;background:linear-gradient(90deg,var(--brand),var(--purple-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{
+  font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:999px;
+  letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:all .2s;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge-chain{background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3)}
+.badge-chain:hover{background:rgba(99,102,241,0.3);box-shadow:0 0 12px var(--purple-glow)}
+.badge-valid{background:rgba(16,185,129,0.12);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25)}
+.badge-valid.checking{background:rgba(99,102,241,0.12);color:#a5b4fc;border-color:rgba(99,102,241,0.25);animation:pulse 1.5s ease-in-out infinite}
+.badge-valid.fail{background:rgba(248,113,113,0.12);color:#fca5a5;border-color:rgba(248,113,113,0.3)}
+.badge-tax{background:rgba(251,191,36,0.1);color:#fcd34d;border:1px solid rgba(251,191,36,0.2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════════════════════════════ */
+.hero{padding:72px 0 48px;text-align:center}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--brand);border:1px solid rgba(16,185,129,0.25);
+  background:rgba(16,185,129,0.08);border-radius:999px;padding:5px 14px;
+  margin-bottom:24px;
+}
+.hero-eyebrow::before{content:"⛓";font-size:0.9rem}
+.hero-title{
+  font-size:clamp(2.4rem,6vw,4.5rem);font-weight:900;line-height:1.1;
+  letter-spacing:-0.03em;margin-bottom:20px;
+}
+.hero-title .grad{
+  background:linear-gradient(135deg,var(--brand) 0%,var(--purple-light) 50%,var(--indigo) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{
+  font-size:1.1rem;color:var(--text-muted);max-width:520px;margin:0 auto 36px;
+  font-weight:400;line-height:1.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DONATE CARD (GLASS)
+═══════════════════════════════════════════════════════════════════════════ */
+.glass-card{
+  background:var(--bg-card);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--border);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-card);
+  padding:28px;
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .3s,box-shadow .3s;
+}
+.glass-card:hover{
+  border-color:rgba(139,92,246,0.2);
+  box-shadow:var(--shadow-card),0 0 30px rgba(139,92,246,0.08);
+}
+.glass-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(139,92,246,0.5),rgba(16,185,129,0.5),transparent);
+}
+.card-title{
+  font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:18px;display:flex;align-items:center;gap:8px;
+}
+.card-title::before{content:'';display:block;width:3px;height:14px;border-radius:999px;background:linear-gradient(to bottom,var(--brand),var(--purple))}
+
+/* Flash */
+#flash{
+  padding:12px 16px;border-radius:var(--radius-lg);font-size:0.9rem;font-weight:600;
+  display:none;margin-bottom:16px;animation:slideIn .25s ease;
+  display:flex;align-items:center;gap:8px;
+}
+#flash.success{background:rgba(16,185,129,0.1);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25)}
+#flash.error{background:rgba(248,113,113,0.1);color:#fca5a5;border:1px solid rgba(248,113,113,0.25)}
+#flash[style*="none"]{display:none!important}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Mining banner */
+#miningBanner{
+  display:none;padding:14px 18px;border-radius:var(--radius-lg);font-size:0.9rem;font-weight:600;
+  background:rgba(99,102,241,0.12);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);
+  margin-bottom:16px;align-items:center;gap:10px;
+}
+#miningBanner.show{display:flex;animation:slideIn .25s ease}
+.spinner{
+  width:16px;height:16px;border:2px solid rgba(99,102,241,0.3);border-top-color:#a5b4fc;
+  border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Form */
+.donate-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim)}
+input{
+  width:100%;padding:13px 16px;
+  background:rgba(15,23,42,0.6);
+  border:1px solid rgba(148,163,184,0.12);
+  border-radius:var(--radius-md);
+  font-size:0.95rem;color:var(--text);
+  font-family:'Outfit',sans-serif;
+  outline:none;transition:border .2s,box-shadow .2s,background .2s;
+}
+input:focus{
+  border-color:rgba(139,92,246,0.5);
+  box-shadow:0 0 0 3px rgba(139,92,246,0.12),0 0 16px rgba(139,92,246,0.08);
+  background:rgba(15,23,42,0.9);
+}
+input::placeholder{color:var(--text-dim);font-weight:400}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
+.btn-donate{
+  border:none;border-radius:var(--radius-md);
+  background:linear-gradient(135deg,var(--brand),var(--brand-dark));
+  color:#fff;font-size:0.95rem;font-weight:700;padding:13px 24px;
+  cursor:pointer;font-family:'Outfit',sans-serif;
+  transition:all .2s;white-space:nowrap;
+  box-shadow:0 0 20px var(--brand-glow),0 4px 12px rgba(0,0,0,0.3);
+  align-self:end;
+}
+.btn-donate:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 30px var(--brand-glow),0 8px 20px rgba(0,0,0,0.4);
+  background:linear-gradient(135deg,#34d399,var(--brand));
+}
+.btn-donate:active{transform:scale(0.97)}
+.btn-donate:disabled{opacity:.5;cursor:not-allowed;pointer-events:none;box-shadow:none}
+.form-hint{font-size:0.78rem;color:var(--text-dim);margin-top:10px;line-height:1.5}
+.form-hint strong{color:var(--brand);font-weight:600}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATS ROW
+═══════════════════════════════════════════════════════════════════════════ */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.stat-card{
+  background:var(--bg-card2);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:18px 20px;
+  backdrop-filter:blur(16px);position:relative;overflow:hidden;
+  transition:transform .2s,border-color .2s;
+}
+.stat-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--brand),var(--purple));opacity:0;
+  transition:opacity .3s;
+}
+.stat-card:hover{transform:translateY(-2px);border-color:rgba(139,92,246,0.2)}
+.stat-card:hover::after{opacity:1}
+.stat-num{font-size:1.6rem;font-weight:800;line-height:1;margin-bottom:4px}
+.stat-num.green{background:linear-gradient(135deg,var(--brand),#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-num.red{color:#f87171}
+.stat-num.purple{background:linear-gradient(135deg,var(--purple-light),var(--indigo));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:0.72rem;font-weight:600;color:var(--text-dim);letter-spacing:0.04em;text-transform:uppercase}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEDGER CARD
+═══════════════════════════════════════════════════════════════════════════ */
+.view-toggle{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.toggle-btn{
+  border:1px solid rgba(148,163,184,0.12);background:rgba(15,23,42,0.5);
+  border-radius:9px;padding:7px 16px;font-size:0.8rem;color:var(--text-dim);
+  cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600;
+  transition:all .18s;letter-spacing:0.02em;
+}
+.toggle-btn:hover{color:var(--text);border-color:rgba(139,92,246,0.3)}
+.toggle-btn.active{
+  background:rgba(139,92,246,0.15);color:#c4b5fd;
+  border-color:rgba(139,92,246,0.4);
+  box-shadow:0 0 12px rgba(139,92,246,0.15);
+}
+.toggle-btn.active-green{
+  background:rgba(16,185,129,0.12);color:#6ee7b7;
+  border-color:rgba(16,185,129,0.3);
+}
+
+/* Table */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:0.875rem}
+thead{background:rgba(15,23,42,0.6)}
+th{
+  text-align:left;padding:12px 14px;font-size:0.68rem;font-weight:800;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+td{padding:13px 14px;border-bottom:1px solid rgba(148,163,184,0.06);vertical-align:middle;transition:background .15s}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(139,92,246,0.04)}
+.cell-mono{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted)}
+.cell-addr .cell-mono{color:#94a3b8;max-width:120px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cell-addr a{text-decoration:none;color:inherit;transition:color .15s}
+.cell-addr a:hover{color:#c4b5fd}
+.cell-amt{font-weight:700;white-space:nowrap}
+.cell-amt.pos{color:#34d399}
+.cell-amt.neg{color:#f87171}
+.cell-time{font-size:0.75rem;color:var(--text-dim);white-space:nowrap}
+.cell-hash{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:#a78bfa;cursor:pointer;max-width:110px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s}
+.cell-hash:hover{color:#c4b5fd;text-decoration:underline}
+.block-pill{
+  display:inline-block;padding:2px 8px;
+  background:rgba(99,102,241,0.12);color:#a5b4fc;
+  border:1px solid rgba(99,102,241,0.2);border-radius:6px;
+  font-size:0.68rem;font-weight:800;font-family:'JetBrains Mono',monospace;
+}
+.empty-state{padding:48px 20px;text-align:center;color:var(--text-dim)}
+.empty-state .icon{font-size:2.5rem;margin-bottom:12px;opacity:0.5}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BLOCKCHAIN EXPLORER
+═══════════════════════════════════════════════════════════════════════════ */
+.chain-status{
+  padding:12px 16px;border-radius:var(--radius-md);font-size:0.85rem;font-weight:600;
+  display:none;margin-bottom:16px;align-items:center;gap:8px;
+}
+.chain-status.show{display:flex;animation:slideIn .25s ease}
+.chain-status.ok{background:rgba(16,185,129,0.1);color:#6ee7b7;border:1px solid rgba(16,185,129,0.2)}
+.chain-status.fail{background:rgba(248,113,113,0.1);color:#fca5a5;border:1px solid rgba(248,113,113,0.2)}
+.chain-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.btn-sm{
+  border:1px solid rgba(139,92,246,0.3);background:rgba(139,92,246,0.1);
+  color:#c4b5fd;font-size:0.8rem;font-weight:700;padding:7px 14px;
+  border-radius:8px;cursor:pointer;font-family:'Outfit',sans-serif;
+  transition:all .18s;
+}
+.btn-sm:hover{background:rgba(139,92,246,0.25);box-shadow:0 0 12px var(--purple-glow)}
+
+/* Block cards */
+.block-stack{display:flex;flex-direction:column;gap:0}
+.block-node{
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px 20px;background:var(--bg-card2);
+  transition:border-color .2s,box-shadow .2s;
+}
+.block-node:hover{border-color:rgba(139,92,246,0.3);box-shadow:0 0 20px rgba(139,92,246,0.06)}
+.block-node.genesis{border-color:rgba(16,185,129,0.2);background:rgba(16,185,129,0.04)}
+.block-link-arrow{display:flex;justify-content:center;padding:4px 0;color:rgba(139,92,246,0.4)}
+.block-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.block-fields{display:grid;gap:6px}
+.block-field{display:flex;gap:12px;font-size:0.8rem;align-items:flex-start}
+.block-key{color:var(--text-dim);min-width:80px;font-weight:600;font-size:0.72rem;letter-spacing:0.04em;text-transform:uppercase;padding-top:1px}
+.block-val{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);word-break:break-all;line-height:1.5}
+.block-val.hash{color:#a78bfa}
+.block-val.prev{color:var(--text-dim)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MERKLE TREE
+═══════════════════════════════════════════════════════════════════════════ */
+.merkle-root-card{
+  border:1px solid rgba(16,185,129,0.25);border-radius:var(--radius-lg);padding:20px;
+  background:rgba(16,185,129,0.06);margin-bottom:18px;
+  position:relative;overflow:hidden;
+}
+.merkle-root-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(16,185,129,0.6),transparent);
+}
+.merkle-root-label{font-size:0.68rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--brand);margin-bottom:8px}
+.merkle-root-hash{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#6ee7b7;word-break:break-all;cursor:pointer;line-height:1.6;transition:color .15s}
+.merkle-root-hash:hover{color:#a7f3d0}
+.merkle-root-meta{font-size:0.72rem;color:var(--text-dim);margin-top:8px}
+.merkle-wrap{overflow-x:auto;padding-bottom:8px}
+.merkle-row{display:flex;justify-content:center;gap:6px;margin-bottom:4px;flex-wrap:wrap}
+.merkle-node-btn{
+  font-family:'JetBrains Mono',monospace;font-size:0.65rem;
+  padding:5px 10px;border-radius:8px;cursor:pointer;
+  white-space:nowrap;transition:all .18s;border:1px solid;
+  max-width:150px;overflow:hidden;text-overflow:ellipsis;
+}
+.merkle-node-btn.internal{
+  background:rgba(99,102,241,0.08);color:#a5b4fc;border-color:rgba(99,102,241,0.2);
+}
+.merkle-node-btn.internal:hover{background:rgba(99,102,241,0.25);border-color:rgba(99,102,241,0.5);box-shadow:0 0 10px rgba(99,102,241,0.2)}
+.merkle-node-btn.leaf{
+  background:rgba(16,185,129,0.08);color:#6ee7b7;border-color:rgba(16,185,129,0.2);
+}
+.merkle-node-btn.leaf:hover{background:rgba(16,185,129,0.2);border-color:rgba(16,185,129,0.5)}
+.merkle-sep{text-align:center;color:rgba(139,92,246,0.3);font-size:0.9rem;padding:2px 0}
+.merkle-explainer{
+  font-size:0.8rem;color:var(--text-dim);margin-top:14px;padding:14px 16px;
+  background:rgba(15,23,42,0.5);border-radius:var(--radius-md);border:1px solid var(--border);
+  line-height:1.6;
+}
+.merkle-explainer strong{color:var(--text-muted)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DIGITAL SIGNATURES
+═══════════════════════════════════════════════════════════════════════════ */
+.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.sig-grid{grid-template-columns:1fr}}
+.sig-box{
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px;background:rgba(15,23,42,0.5);
+}
+.sig-title{font-size:0.72rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px}
+.code-block{
+  font-family:'JetBrains Mono',monospace;font-size:0.68rem;
+  background:rgba(3,7,18,0.8);border:1px solid rgba(148,163,184,0.08);
+  color:#7dd3fc;padding:12px 14px;border-radius:var(--radius-md);
+  word-break:break-all;white-space:pre-wrap;max-height:140px;
+  overflow-y:auto;line-height:1.6;
+}
+.code-block.green{color:#6ee7b7}
+select.sig-select{
+  width:100%;padding:10px 14px;
+  background:rgba(15,23,42,0.6);border:1px solid rgba(148,163,184,0.12);
+  border-radius:var(--radius-md);font-size:0.9rem;color:var(--text);
+  font-family:'Outfit',sans-serif;cursor:pointer;margin-bottom:12px;
+  outline:none;transition:border .2s;
+}
+select.sig-select:focus{border-color:rgba(139,92,246,0.5)}
+select.sig-select option{background:#0f172a}
+.btn-verify{
+  width:100%;padding:11px;border:none;border-radius:var(--radius-md);
+  background:linear-gradient(135deg,var(--purple),var(--indigo));
+  color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;
+  font-family:'Outfit',sans-serif;transition:all .2s;
+  box-shadow:0 0 16px var(--purple-glow);
+}
+.btn-verify:hover{transform:translateY(-1px);box-shadow:0 0 24px var(--purple-glow)}
+.verify-result{
+  padding:10px 14px;border-radius:var(--radius-md);font-size:0.85rem;font-weight:600;
+  margin-top:12px;display:none;animation:slideIn .2s ease;
+}
+.verify-result.ok{background:rgba(16,185,129,0.1);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25)}
+.verify-result.fail{background:rgba(248,113,113,0.1);color:#fca5a5;border:1px solid rgba(248,113,113,0.25)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GRAPH
+═══════════════════════════════════════════════════════════════════════════ */
+.graph-svg-wrap{background:rgba(3,7,18,0.5);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.graph-svg-wrap svg{width:100%;height:460px;display:block}
+.graph-node-fill{fill:rgba(15,23,42,0.9)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════════════════════════ */
+footer{
+  margin-top:64px;padding:24px 0;border-top:1px solid var(--border);
+  text-align:center;font-size:0.78rem;color:var(--text-dim);
+}
+footer span{color:var(--brand)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.15);border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:rgba(148,163,184,0.3)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════════════════ */
+@media(max-width:680px){
+  .donate-form{grid-template-columns:1fr}
+  .btn-donate{width:100%}
+  .stats-row{grid-template-columns:1fr}
+  .chain-stats-row{grid-template-columns:1fr}
+  .hero-title{font-size:2.2rem}
+}
+@media(max-width:420px){
+  .nav-badges{display:none}
+}
+</style>
+</head>
+<body>
+<!-- Animated background -->
+<canvas id="bg-canvas"></canvas>
+<div class="nebula"></div>
+
+<!-- Navbar -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">
+      <div class="nav-logo">G</div>
+      <span class="nav-name">GiveFlow</span>
+    </a>
+    <div class="nav-badges">
+      <span id="chainValidBadge" class="badge badge-valid checking" onclick="validateChain()" title="Click to validate chain">⛓ Checking chain...</span>
+      <span class="badge badge-tax">{{ tax_rate }}% Platform Tax</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="container">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">Blockchain-Secured Donations</div>
+    <h1 class="hero-title">Give with <span class="grad">Transparency.</span><br>Trust the Chain.</h1>
+    <p class="hero-sub">Every donation is cryptographically signed, mined as a blockchain block, and verifiable forever. No trust needed — the math proves it.</p>
+  </section>
+
+  <!-- Mining banner -->
+  <div id="miningBanner">
+    <div class="spinner"></div>
+    <span id="miningMsg">Mining new block with Proof-of-Work...</span>
+  </div>
+
+  <!-- Flash -->
+  <div id="flash" style="display:none"></div>
+
+  <!-- Donate card -->
+  <div class="glass-card">
+    <div class="card-title">Send a donation</div>
+    <form id="donateForm" class="donate-form">
+      <div class="form-group">
+        <label class="form-label">From (Donor)</label>
+        <input id="donor" type="text" placeholder="Your name or wallet" required autocomplete="off" list="donorList">
+        <datalist id="donorList"></datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">To (Recipient)</label>
+        <input id="recipient" type="text" placeholder="Recipient name or wallet" required autocomplete="off" list="recipientList">
+        <datalist id="recipientList"></datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input id="amount" type="number" step="0.01" min="0" placeholder="0.00" required>
+      </div>
+      <button type="submit" class="btn-donate" id="submitBtn">⚡ Donate</button>
+    </form>
+    <p class="form-hint">A <strong>{{ tax_rate }}% platform fee</strong> is deducted. Each donation is <strong>mined as a SHA-256 block</strong> and <strong>RSA-signed</strong> before being added to the immutable ledger.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card"><div class="stat-num green" id="st-total">—</div><div class="stat-label">Total Donated</div></div>
+    <div class="stat-card"><div class="stat-num red" id="st-tax">—</div><div class="stat-label">Platform Tax</div></div>
+    <div class="stat-card"><div class="stat-num purple" id="st-net">—</div><div class="stat-label">Net to Recipients</div></div>
+  </div>
+
+  <!-- Ledger card -->
+  <div class="glass-card">
+    <div class="card-title">Ledger &amp; Explorer</div>
+    <div class="view-toggle" id="viewToggle">
+      <button class="toggle-btn active-green active" id="viewTable">📋 Transactions</button>
+      <button class="toggle-btn" id="viewGraph">🌐 Network Graph</button>
+      <button class="toggle-btn" id="viewChain">⛓ Blockchain</button>
+      <button class="toggle-btn" id="viewMerkle">🌲 Merkle Tree</button>
+      <button class="toggle-btn" id="viewSig">🔑 Signatures</button>
+    </div>
+
+    <!-- Table view -->
+    <div id="tableView">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Block</th><th>Donor</th><th>Recipient</th><th>Amount</th><th>Tax</th><th>Net</th><th>Hash</th><th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <div class="icon">🌱</div>
+        <div>No donations yet. Be the first to give.</div>
+      </div>
+    </div>
+
+    <!-- Graph view -->
+    <div id="graphView" style="display:none">
+      <div class="graph-svg-wrap">
+        <svg id="graph" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+
+    <!-- Blockchain explorer -->
+    <div id="chainView" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div style="font-size:0.78rem;color:var(--text-dim)">SHA-256 Proof-of-Work chain · difficulty prefix <code style="color:#a78bfa;font-family:'JetBrains Mono',monospace">00</code></div>
+        <button class="btn-sm" onclick="validateChain()">🔍 Validate Full Chain</button>
+      </div>
+      <div id="chainStatus" class="chain-status"></div>
+      <div class="chain-stats-row" id="chainStatsRow"></div>
+      <div class="block-stack" id="blockStack"></div>
+    </div>
+
+    <!-- Merkle Tree -->
+    <div id="merkleView" style="display:none">
+      <div class="merkle-root-card">
+        <div class="merkle-root-label">🌳 Merkle Root — Single hash representing ALL blocks</div>
+        <div class="merkle-root-hash" id="merkleRoot" onclick="navigator.clipboard.writeText(this.textContent)" title="Click to copy">Loading...</div>
+        <div class="merkle-root-meta" id="merkleLeafCount"></div>
+      </div>
+      <div class="merkle-wrap" id="merkleWrap"></div>
+      <div class="merkle-explainer">
+        💡 <strong>Leaf nodes</strong> (green) = individual block hashes. <strong>Internal nodes</strong> (purple) = SHA-256 of left child + right child. The <strong>Merkle Root</strong> (top) is a fingerprint of the entire blockchain — change one transaction and the whole root changes. This is how Bitcoin SPV wallets verify transactions without downloading the full chain.
+      </div>
+    </div>
+
+    <!-- Digital Signatures -->
+    <div id="sigView" style="display:none">
+      <div style="font-size:0.82rem;color:var(--text-dim);margin-bottom:16px;line-height:1.6">
+        Every donation is <strong style="color:var(--text-muted)">signed with RSA-PSS + SHA-256</strong> using the platform's 2048-bit private key. Use the public key below to verify any donation's authenticity.
+      </div>
+      <div class="sig-grid">
+        <div class="sig-box">
+          <div class="sig-title">🔍 Verify a Donation</div>
+          <select class="sig-select" id="donationPicker"><option value="">— Select a donation —</option></select>
+          <div class="sig-title">Signed Message</div>
+          <div class="code-block" id="signedMsgDisplay">Select a donation above</div>
+          <div class="sig-title" style="margin-top:12px">RSA-PSS Signature (Base64)</div>
+          <div class="code-block" id="signatureDisplay">—</div>
+          <button class="btn-verify" style="margin-top:14px" onclick="verifySelected()">✔ Verify Signature</button>
+          <div class="verify-result" id="verifyResult"></div>
+        </div>
+        <div class="sig-box">
+          <div class="sig-title">🔓 Platform Public Key (RSA 2048-bit)</div>
+          <div class="code-block green" id="publicKeyDisplay">Loading...</div>
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:10px;line-height:1.5">
+            This public key is safe to share. The private key stays on the server and signs every donation. Anyone can verify — no trust required.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /glass-card -->
+
+  <footer>
+    <span>GiveFlow</span> &middot; Blockchain-secured charitable donations &middot; Built with Flask + SHA-256 PoW + RSA Digital Signatures
+  </footer>
+</div><!-- /container -->
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   STARFIELD
+══════════════════════════════════════════════════════════════════ */
+(function(){
+  const canvas=document.getElementById("bg-canvas");
+  const ctx=canvas.getContext("2d");
+  let W,H,stars=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  function mkStars(){
+    stars=[];
+    const n=Math.floor(W*H/5000);
+    for(let i=0;i<n;i++){
+      stars.push({x:Math.random()*W,y:Math.random()*H,
+        r:Math.random()*1.2+0.2,o:Math.random(),speed:Math.random()*0.4+0.1,
+        d:Math.random()*Math.PI*2});
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const t=Date.now()/1000;
+    stars.forEach(s=>{
+      const alpha=0.3+0.4*Math.sin(t*s.speed+s.d);
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(203,213,225,${alpha})`;ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener("resize",()=>{resize();mkStars();});
+  resize();mkStars();draw();
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════════════ */
+const TAX_RATE = {{ tax_rate }}/100;
+function money(n){return Number(n||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtTime(iso){return new Date(iso).toLocaleString(undefined,{dateStyle:"short",timeStyle:"short"})}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function short(h,a=10,b=6){return h?h.slice(0,a)+"…"+h.slice(-b):"-"}
+
+async function apiFetch(path,opts={}){
+  const res=await fetch(path,{headers:{"Content-Type":"application/json",...(opts.headers||{})},...opts});
+  const text=await res.text();let data=null;
+  try{data=JSON.parse(text)}catch{}
+  if(!res.ok||data===null)throw new Error(data?.error||`Error ${res.status}`);
+  return data;
+}
+
+function showFlash(msg,kind){
+  const f=document.getElementById("flash");
+  f.innerHTML=`<span>${kind==="success"?"✓":"✗"}</span> ${msg}`;
+  f.className=kind;f.style.display="flex";
+  setTimeout(()=>f.style.display="none",6000);
+}
+
+let _donations=[], _chain=[];
+
+async function load(){
+  _donations=await apiFetch("/api/donations");
+  renderTable(_donations);
+  renderGraph(_donations);
+  pickNames(_donations);
+  updateStats(_donations);
+  _chain=await apiFetch("/api/chain");
+  renderChainExplorer(_chain);
+  renderChainStats(_chain);
+  const v=await apiFetch("/api/chain/validate");
+  updateChainBadge(v);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STATS
+══════════════════════════════════════════════════════════════════ */
+function updateStats(d){
+  let ta=0,tt=0,tn=0;
+  d.forEach(x=>{ta+=Number(x.amount||0);tt+=Number(x.tax_amount||0);tn+=Number(x.net_amount||0);});
+  document.getElementById("st-total").textContent=money(ta);
+  document.getElementById("st-tax").textContent="−"+money(tt);
+  document.getElementById("st-net").textContent="+"+money(tn);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════════════════════════════ */
+function renderTable(d){
+  const tbody=document.getElementById("tbody");
+  const empty=document.getElementById("emptyState");
+  tbody.innerHTML="";
+  if(!d.length){empty.style.display="block";return;}
+  empty.style.display="none";
+  d.forEach(x=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><span class="block-pill">#${x.block_index||0}</span></td>
+      <td class="cell-addr"><a href="/user/${encodeURIComponent(x.donor)}"><span class="cell-mono">${esc(x.donor)}</span></a></td>
+      <td class="cell-addr"><a href="/user/${encodeURIComponent(x.recipient)}"><span class="cell-mono">${esc(x.recipient)}</span></a></td>
+      <td class="cell-amt">+${money(x.amount)}</td>
+      <td class="cell-amt neg">−${money(x.tax_amount)}</td>
+      <td class="cell-amt pos">+${money(x.net_amount)}</td>
+      <td><span class="cell-hash" title="${esc(x.block_hash||'')}" onclick="navigator.clipboard.writeText('${x.block_hash||''}')">${short(x.block_hash)}</span></td>
+      <td class="cell-time">${fmtTime(x.timestamp)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   GRAPH
+══════════════════════════════════════════════════════════════════ */
+function renderGraph(d){
+  const svg=document.getElementById("graph");svg.innerHTML="";
+  const NS="http://www.w3.org/2000/svg";
+  const defs=document.createElementNS(NS,"defs");
+  // Gradient
+  const grad=document.createElementNS(NS,"linearGradient");
+  grad.setAttribute("id","edgeGrad");grad.setAttribute("gradientUnits","userSpaceOnUse");
+  const s1=document.createElementNS(NS,"stop");s1.setAttribute("offset","0%");s1.setAttribute("stop-color","#6366f1");s1.setAttribute("stop-opacity","0.6");
+  const s2=document.createElementNS(NS,"stop");s2.setAttribute("offset","100%");s2.setAttribute("stop-color","#10b981");s2.setAttribute("stop-opacity","0.6");
+  grad.appendChild(s1);grad.appendChild(s2);
+  // Arrow marker
+  const mk=document.createElementNS(NS,"marker");mk.setAttribute("id","arr");mk.setAttribute("viewBox","0 0 10 10");mk.setAttribute("refX","8");mk.setAttribute("refY","5");mk.setAttribute("markerWidth","6");mk.setAttribute("markerHeight","6");mk.setAttribute("orient","auto");
+  const ap=document.createElementNS(NS,"path");ap.setAttribute("d","M0,0 L10,5 L0,10 z");ap.setAttribute("fill","#8b5cf6");mk.appendChild(ap);
+  // Glow filter
+  const filt=document.createElementNS(NS,"filter");filt.setAttribute("id","glow");
+  const blur=document.createElementNS(NS,"feGaussianBlur");blur.setAttribute("stdDeviation","4");blur.setAttribute("result","blur");
+  const mg=document.createElementNS(NS,"feMerge");const mn1=document.createElementNS(NS,"feMergeNode");mn1.setAttribute("in","blur");const mn2=document.createElementNS(NS,"feMergeNode");mn2.setAttribute("in","SourceGraphic");mg.appendChild(mn1);mg.appendChild(mn2);filt.appendChild(blur);filt.appendChild(mg);
+  defs.appendChild(grad);defs.appendChild(mk);defs.appendChild(filt);svg.appendChild(defs);
+  const nodes=[...new Set(d.flatMap(x=>[x.donor,x.recipient]))];
+  if(!nodes.length){return;}
+  const W=800,H=480,cx=W/2,cy=H/2,r=Math.min(W,H)*0.36;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const base=nodes.map((name,i)=>{const a=i/nodes.length*2*Math.PI;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a),name};});
+  const edges=[],els=[],pos=[];let hovered=null;
+  d.forEach((x,i)=>{
+    const ai=base.findIndex(n=>n.name===x.donor),bi=base.findIndex(n=>n.name===x.recipient);
+    const e=document.createElementNS(NS,"path");e.setAttribute("fill","none");e.setAttribute("stroke","rgba(99,102,241,0.3)");e.setAttribute("stroke-width","1.5");e.setAttribute("marker-end","url(#arr)");
+    const t=document.createElementNS(NS,"title");t.textContent=`${esc(x.donor)} → ${esc(x.recipient)} · ${money(x.amount)}`;e.appendChild(t);svg.appendChild(e);
+    edges.push({el:e,ai,bi,off:50+(i%5)*12});
+  });
+  base.forEach((nd,i)=>{
+    const g=document.createElementNS(NS,"g");
+    const c=document.createElementNS(NS,"circle");c.setAttribute("r","18");c.setAttribute("fill","rgba(15,23,42,0.9)");c.setAttribute("stroke","#6366f1");c.setAttribute("stroke-width","1.5");
+    const lbl=document.createElementNS(NS,"text");lbl.setAttribute("text-anchor","middle");lbl.setAttribute("font-size","9");lbl.setAttribute("fill","#94a3b8");lbl.setAttribute("font-family","Outfit,sans-serif");lbl.textContent=nd.name;
+    g.appendChild(c);g.appendChild(lbl);
+    const lnk=document.createElementNS(NS,"a");lnk.setAttribute("href",`/user/${encodeURIComponent(nd.name)}`);lnk.appendChild(g);svg.appendChild(lnk);
+    els.push({g,c,lbl});pos.push({x:nd.x,y:nd.y});
+    lnk.onmouseover=()=>{hovered=i;c.setAttribute("stroke","#10b981");c.setAttribute("stroke-width","2.5");c.setAttribute("filter","url(#glow)");};
+    lnk.onmouseout=()=>{hovered=null;c.setAttribute("stroke","#6366f1");c.setAttribute("stroke-width","1.5");c.removeAttribute("filter");};
+  });
+  function frame(){
+    const t=performance.now();
+    els.forEach((p,i)=>{if(i===hovered)return;const ox=Math.sin(t/1800+i)*8,oy=Math.cos(t/2200+i)*5;pos[i]={x:base[i].x+ox,y:base[i].y+oy};p.c.setAttribute("cx",pos[i].x);p.c.setAttribute("cy",pos[i].y);p.c.setAttribute("r",17+Math.sin(t/900+i)*2);p.lbl.setAttribute("x",pos[i].x);p.lbl.setAttribute("y",pos[i].y+4);});
+    edges.forEach(({el,ai,bi,off})=>{const A=pos[ai],B=pos[bi];const mx=(A.x+B.x)/2,my=(A.y+B.y)/2,nx=-(B.y-A.y),ny=B.x-A.x,len=Math.hypot(nx,ny)||1;el.setAttribute("d",`M${A.x},${A.y} Q${mx+nx/len*off},${my+ny/len*off} ${B.x},${B.y}`);});
+    requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function pickNames(d){
+  const names=[...new Set(d.flatMap(x=>[x.donor,x.recipient]))];
+  const opts=names.map(n=>`<option value="${esc(n)}">`).join("");
+  document.getElementById("donorList").innerHTML=opts;
+  document.getElementById("recipientList").innerHTML=opts;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BLOCKCHAIN EXPLORER
+══════════════════════════════════════════════════════════════════ */
+function renderChainStats(chain){
+  const row=document.getElementById("chainStatsRow");
+  const dBlocks=chain.filter(b=>b.block_index>0).length;
+  const avgMine=dBlocks?(_donations.reduce((s,d)=>s+(d.mining_time_ms||0),0)/dBlocks).toFixed(0):0;
+  row.innerHTML=`
+    <div class="stat-card"><div class="stat-num purple">${chain.length}</div><div class="stat-label">Total Blocks</div></div>
+    <div class="stat-card"><div class="stat-num green">${dBlocks}</div><div class="stat-label">Transaction Blocks</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#fbbf24">${avgMine}ms</div><div class="stat-label">Avg Mining Time</div></div>
+  `;
+}
+function renderChainExplorer(chain){
+  const stack=document.getElementById("blockStack");stack.innerHTML="";
+  [...chain].reverse().forEach((b,i)=>{
+    if(i>0){const arr=document.createElement("div");arr.className="block-link-arrow";arr.innerHTML=`<svg width="20" height="24" viewBox="0 0 20 24"><path d="M10 0 L10 18 M5 13 L10 18 L15 13" stroke="#6366f1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/></svg>`;stack.appendChild(arr);}
+    const card=document.createElement("div");
+    card.className="block-node"+(b.block_index===0?" genesis":"");
+    card.innerHTML=`
+      <div class="block-header">
+        <span class="block-pill">#${b.block_index}</span>
+        <span style="font-weight:700;font-size:0.9rem;color:${b.block_index===0?"var(--brand)":"var(--text)"}">${b.block_index===0?"🌐 Genesis Block":"📦 Block #"+b.block_index}</span>
+      </div>
+      <div class="block-fields">
+        ${b.block_index>0?`
+        <div class="block-field"><span class="block-key">From</span><span class="block-val">${esc(b.donor)}</span></div>
+        <div class="block-field"><span class="block-key">To</span><span class="block-val">${esc(b.recipient)}</span></div>
+        <div class="block-field"><span class="block-key">Amount</span><span class="block-val">+${money(b.amount)} (tax: ${money(b.tax_amount)}, net: +${money(b.net_amount)})</span></div>
+        `:""}
+        <div class="block-field"><span class="block-key">Time</span><span class="block-val">${fmtTime(b.timestamp)}</span></div>
+        <div class="block-field"><span class="block-key">Nonce</span><span class="block-val">${Number(b.nonce||0).toLocaleString()}</span></div>
+        <div class="block-field"><span class="block-key">Hash</span><span class="block-val hash" title="Click to copy" style="cursor:pointer" onclick="navigator.clipboard.writeText('${b.hash}');this.style.color='#6ee7b7'">${b.hash}</span></div>
+        <div class="block-field"><span class="block-key">Prev</span><span class="block-val prev">${b.previous_hash}</span></div>
+      </div>
+    `;
+    stack.appendChild(card);
+  });
+}
+function updateChainBadge(result){
+  const badge=document.getElementById("chainValidBadge");
+  if(result.is_valid){badge.className="badge badge-valid";badge.textContent=`✓ Chain Valid (${result.total_blocks} blocks)`;}
+  else{badge.className="badge badge-valid fail";badge.textContent=`✗ Invalid at #${result.tampered_index}`;}
+}
+async function validateChain(){
+  document.getElementById("chainValidBadge").className="badge badge-valid checking";
+  document.getElementById("chainValidBadge").textContent="⛓ Validating...";
+  const bar=document.getElementById("chainStatus");bar.className="chain-status";bar.style.display="none";
+  const v=await apiFetch("/api/chain/validate");
+  updateChainBadge(v);
+  bar.className="chain-status show "+(v.is_valid?"ok":"fail");
+  bar.innerHTML=v.is_valid?`✓ <strong>Blockchain intact!</strong> ${v.message}`:`✗ <strong>Tamper detected!</strong> ${v.reason}`;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MERKLE TREE
+══════════════════════════════════════════════════════════════════ */
+async function loadMerkle(){
+  const data=await apiFetch("/api/merkle");
+  document.getElementById("merkleRoot").textContent=data.root;
+  document.getElementById("merkleLeafCount").textContent=`${data.leaf_count} leaf nodes · ${data.levels.length} levels in tree`;
+  const wrap=document.getElementById("merkleWrap");wrap.innerHTML="";
+  const reversed=[...data.levels].reverse();
+  reversed.forEach((level,li)=>{
+    const isLeaf=li===reversed.length-1;
+    if(li>0){const sep=document.createElement("div");sep.className="merkle-sep";sep.textContent="↕";wrap.appendChild(sep);}
+    const row=document.createElement("div");row.className="merkle-row";
+    level.forEach(hash=>{
+      const btn=document.createElement("div");
+      btn.className="merkle-node-btn "+(isLeaf?"leaf":"internal");
+      btn.textContent=short(hash,10,6);btn.title=`${isLeaf?"Leaf":"Internal"}: ${hash}\nClick to copy`;
+      btn.onclick=()=>{navigator.clipboard.writeText(hash);btn.style.opacity="0.4";setTimeout(()=>btn.style.opacity="1",400);};
+      row.appendChild(btn);
+    });
+    wrap.appendChild(row);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DIGITAL SIGNATURES
+══════════════════════════════════════════════════════════════════ */
+let _sigData=[];
+async function loadSigs(){
+  const pk=await apiFetch("/api/signature/public-key");
+  document.getElementById("publicKeyDisplay").textContent=pk.public_key_pem;
+  const picker=document.getElementById("donationPicker");
+  picker.innerHTML=`<option value="">— Select a donation —</option>`;
+  _sigData=_donations.filter(d=>d.signature&&d.signature!=="");
+  _sigData.forEach((d,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`Block #${d.block_index} · ${d.donor} → ${d.recipient} (${money(d.amount)})`;picker.appendChild(o);});
+  picker.onchange=()=>{
+    const idx=picker.value;
+    if(idx===""){document.getElementById("signedMsgDisplay").textContent="Select a donation above";document.getElementById("signatureDisplay").textContent="—";document.getElementById("verifyResult").style.display="none";return;}
+    const d=_sigData[idx];
+    document.getElementById("signedMsgDisplay").textContent=d.signed_message||"—";
+    document.getElementById("signatureDisplay").textContent=d.signature||"—";
+    document.getElementById("verifyResult").style.display="none";
+  };
+}
+async function verifySelected(){
+  const idx=document.getElementById("donationPicker").value;if(idx==="")return;
+  const d=_sigData[idx];const result=document.getElementById("verifyResult");
+  result.style.display="block";result.className="verify-result";result.textContent="Verifying...";
+  const r=await apiFetch("/api/signature/verify",{method:"POST",body:JSON.stringify({signed_message:d.signed_message,signature:d.signature})});
+  result.className="verify-result "+(r.valid?"ok":"fail");
+  result.textContent=(r.valid?"✓ ":"✗ ")+r.reason;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DONATE FORM
+══════════════════════════════════════════════════════════════════ */
+document.getElementById("donateForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const btn=document.getElementById("submitBtn");
+  btn.disabled=true;btn.textContent="Mining...";
+  document.getElementById("flash").style.display="none";
+  document.getElementById("miningBanner").classList.add("show");
+  document.getElementById("miningMsg").textContent="⛏ Mining new block with Proof-of-Work...";
+  try{
+    const json=await apiFetch("/api/donations",{method:"POST",body:JSON.stringify({
+      donor:document.getElementById("donor").value,
+      recipient:document.getElementById("recipient").value,
+      amount:document.getElementById("amount").value,
+    })});
+    document.getElementById("miningBanner").classList.remove("show");
+    showFlash(`Block #${json.block_index} mined in ${json.mining_time_ms}ms · nonce: ${Number(json.nonce).toLocaleString()} · donated ${money(json.amount)}, net ${money(json.net_amount)} to ${esc(json.recipient)}`,"success");
+    document.getElementById("donateForm").reset();
+    await load();
+  }catch(err){
+    document.getElementById("miningBanner").classList.remove("show");
+    showFlash(err.message,"error");
+  }finally{
+    btn.disabled=false;btn.textContent="⚡ Donate";
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   VIEW TOGGLE
+══════════════════════════════════════════════════════════════════ */
+const views={
+  viewTable:document.getElementById("tableView"),
+  viewGraph:document.getElementById("graphView"),
+  viewChain:document.getElementById("chainView"),
+  viewMerkle:document.getElementById("merkleView"),
+  viewSig:document.getElementById("sigView"),
+};
+const tg=document.getElementById("viewToggle");
+function setView(id){
+  Object.values(views).forEach(v=>v.style.display="none");
+  views[id].style.display="";
+  [...tg.children].forEach(b=>{b.classList.remove("active","active-green");if(b.id===id){b.classList.add("active");if(id==="viewTable")b.classList.add("active-green");}});
+  if(id==="viewMerkle")loadMerkle();
+  if(id==="viewSig")loadSigs();
+}
+document.getElementById("viewTable").onclick=()=>setView("viewTable");
+document.getElementById("viewGraph").onclick=()=>setView("viewGraph");
+document.getElementById("viewChain").onclick=()=>setView("viewChain");
+document.getElementById("viewMerkle").onclick=()=>setView("viewMerkle");
+document.getElementById("viewSig").onclick=()=>setView("viewSig");
+
+load();
+</script>
+</body>
+</html>
