@@ -1,0 +1,12 @@
+# GitHub Linguist Overrides
+# Ensure Python is the primary language shown in repository stats
+
+*.html linguist-detectable=false
+templates/* linguist-detectable=false
+templates/** linguist-detectable=false
+templates/* linguist-vendored
+templates/** linguist-vendored
+
+# Ensure Python files are strictly detected as Python
+*.py linguist-detectable=true
+*.py linguist-language=Python

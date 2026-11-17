@@ -86,6 +86,7 @@ def validate_chain(blocks: list) -> dict:
 
     for i in range(len(blocks)):
         current = blocks[i]
+        recorded_hash = current.get("hash") or current.get("block_hash") or ""
         expected_hash = calculate_hash(
             current["block_index"],
             current["timestamp"],
@@ -98,16 +99,16 @@ def validate_chain(blocks: list) -> dict:
             current["nonce"],
         )
 
-        if current["hash"] != expected_hash:
+        if recorded_hash != expected_hash:
             return {
                 "is_valid": False,
                 "tampered_index": current["block_index"],
                 "reason": f"Hash mismatch at block #{current['block_index']}: data was altered!",
                 "expected_hash": expected_hash,
-                "recorded_hash": current["hash"],
+                "recorded_hash": recorded_hash,
             }
 
-        if not current["hash"].startswith(DIFFICULTY_PREFIX):
+        if not recorded_hash.startswith(DIFFICULTY_PREFIX):
             return {
                 "is_valid": False,
                 "tampered_index": current["block_index"],
@@ -116,12 +117,13 @@ def validate_chain(blocks: list) -> dict:
 
         if i > 0:
             previous = blocks[i - 1]
-            if current["previous_hash"] != previous["hash"]:
+            prev_recorded = previous.get("hash") or previous.get("block_hash") or ""
+            if current["previous_hash"] != prev_recorded:
                 return {
                     "is_valid": False,
                     "tampered_index": current["block_index"],
                     "reason": f"Broken chain link at block #{current['block_index']}: previous_hash does not match block #{previous['block_index']} hash!",
-                    "expected_previous_hash": previous["hash"],
+                    "expected_previous_hash": prev_recorded,
                     "recorded_previous_hash": current["previous_hash"],
                 }
 

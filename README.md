@@ -81,8 +81,25 @@ pip install -r requirements.txt
 ```bash
 python app.py
 ```
-
 The application will start on **`http://127.0.0.1:5000`**.
+
+### 5. Run the Test Suite (25 Tests)
+```bash
+python -m unittest discover tests -v
+```
+
+### 6. Interactive CLI & Blockchain Audit
+```bash
+python cli.py audit          # Full cryptographic chain audit
+python cli.py stats          # Platform donation and tax totals
+python cli.py keys           # Inspect platform RSA-2048 public key
+python cli.py merkle         # Calculate Merkle root and SPV proofs
+```
+
+### 7. Run Distributed Network Simulator (P2P Consensus)
+```bash
+python simulate_network.py   # Multi-node peer-to-peer consensus simulation
+```
 
 ---
 
